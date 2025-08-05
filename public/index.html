@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Roblox Animation Downloader</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.6rem;
+      font-size: 1rem;
+    }
+    .link {
+      display: block;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Roblox Animation Downloader</h2>
+
+  <label>Animation IDs (comma-separated):</label>
+  <textarea id="animationIds" placeholder="e.g. 507770239,507776043" rows="3"></textarea>
+
+  <label>Place ID:</label>
+  <input type="text" id="placeId" placeholder="1234567890" />
+
+  <button id="fetchBtn">Fetch Animations</button>
+
+  <div id="results"></div>
+
+  <script>
+    document.getElementById("fetchBtn").addEventListener("click", async () => {
+      const animationIds = document.getElementById("animationIds").value.trim();
+      const placeId = document.getElementById("placeId").value.trim();
+      const results = document.getElementById("results");
+      results.innerHTML = "Loading...";
+
+      const res = await fetch("/api/fetch-anims", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ animationIds, placeId })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        results.innerHTML = `<p style="color:red">Error: ${data.error}</p>`;
+        return;
+      }
+
+      results.innerHTML = "<h3>Download Links</h3>";
+
+      data.anims.forEach(anim => {
+        const a = document.createElement("a");
+        a.href = anim.downloadLink;
+        a.download = `${anim.name}.rbxm`;
+        a.textContent = `⬇ ${anim.name}.rbxm`;
+        a.className = "link";
+        results.appendChild(a);
+      });
+
+      const zipA = document.createElement("a");
+      zipA.href = data.zipLink;
+      zipA.textContent = "Download All as ZIP";
+      zipA.className = "link";
+      zipA.style.fontWeight = "bold";
+      results.appendChild(zipA);
+    });
+  </script>
+</body>
+</html>
